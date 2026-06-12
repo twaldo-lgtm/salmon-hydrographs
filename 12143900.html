@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Boxley Creek Near Edgewick, Wa — Salmon Flow Assessment</title>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<style>
+  body       { margin:0; padding:12px; font-family:Arial,sans-serif;
+               font-size:13px; background:#fff; color:#222;
+               overflow-y:auto; }
+  h2         { margin:0 0 4px; font-size:15px; color:#185FA5; }
+  h3         { margin:12px 0 4px; font-size:13px; color:#2E4057; }
+  .meta      { font-size:11px; color:#666; margin-bottom:8px; }
+  .rt-badge  { display:inline-block; background:#e8f5e9;
+               border:1px solid #2e7d32; border-radius:4px;
+               padding:2px 8px; font-size:11px; color:#2e7d32;
+               font-weight:600; margin-bottom:8px; }
+  .note      { background:#fff8e1; border:1px solid #f9a825;
+               border-radius:4px; padding:10px 12px; font-size:12px;
+               color:#555; margin-bottom:12px; line-height:1.5; }
+  .iv-status { font-size:11px; margin-bottom:6px; min-height:16px; }
+  .iv-live   { color:#1a7a1a; font-weight:600; }
+  .iv-none   { color:#999; }
+  .iv-error  { color:#a32d2d; }
+  select     { font-size:13px; padding:4px 8px; border:1px solid #ccc;
+               border-radius:4px; margin-bottom:10px; }
+  #chart     { width:100%; min-height:0; }
+  table      { border-collapse:collapse; width:100%; font-size:12px;
+               margin-top:8px; }
+  th         { text-align:left; padding:5px 8px;
+               border-bottom:2px solid #ccc;
+               background:#f7f7f7; color:#444; }
+  td         { padding:4px 8px; border-bottom:1px solid #eee; }
+  .usgs-link { font-size:11px; margin-top:12px; color:#666; }
+  .usgs-link a { color:#185FA5; }
+</style>
+</head>
+<body>
+<h2>Boxley Creek Near Edgewick, Wa</h2>
+<div class="meta">USGS Site 12143900 &nbsp;|&nbsp;
+  Real-time monitoring active</div>
+<span class="rt-badge">&#9679; Real-Time Monitoring Active</span>
+<div class="iv-status" id="iv-status">Loading real-time data...</div>
+
+<div class="note">
+  <b>No historical flow alteration assessment available.</b><br>
+  This site does not have sufficient discharge data to meet the minimum threshold for flow alteration assessment (5 years of baseline or current period record).<br><br>
+  Real-time discharge (last 12 months) is shown below alongside the
+  salmon life-stage calendar. This reflects actual flow conditions but
+  cannot be compared to a pre-development baseline.
+</div>
+
+<label for="sp-select"><b>Species / run:</b></label><br>
+<select id="sp-select" onchange="switchSpecies(this.value)">
+  <option value="chinook_fall">Chinook - fall run</option><option value="chinook_spring">Chinook - spring run</option><option value="coho">Coho</option><option value="steelhead_winter">Steelhead - winter run</option><option value="steelhead_summer">Steelhead - summer run</option><option value="chum">Chum</option><option value="pink">Pink (odd years)</option><option value="sockeye">Sockeye</option>
+</select>
+
+<div id="chart"></div>
+
+<h3>USGS Parameter Record</h3>
+<table>
+  <thead>
+    <tr><th>Parameter</th><th>Code</th><th>Type</th>
+    <th>Begin date</th><th>End date</th></tr>
+  </thead>
+  <tbody><tr><td>Discharge (cfs)</td><td style="font-family:monospace">00060</td><td>DV, UV</td><td>1981-08-12</td><td>2026-06-12</td></tr><tr><td>Gage height (ft)</td><td style="font-family:monospace">00065</td><td>DV, UV</td><td>1996-10-02</td><td>2026-06-12</td></tr></tbody>
+</table>
+<div class="usgs-link">
+  Full record:
+  <a href="https://waterdata.usgs.gov/monitoring-location/12143900/"
+     target="_blank">
+    waterdata.usgs.gov/monitoring-location/12143900/
+  </a>
+</div>
+
+<script>
+const SITE_ID         = "12143900";
+const LIFE_STAGE_DEFS = {"chinook_fall": {"label": "Chinook - fall run", "stages": [{"name": "Adult entry & migration", "months": [8, 9, 10]}, {"name": "Spawning", "months": [9, 10, 11]}, {"name": "Egg incubation", "months": [10, 11, 12, 1, 2]}, {"name": "Fry emergence & rearing", "months": [3, 4, 5]}, {"name": "Smolt outmigration", "months": [4, 5, 6]}, {"name": "Juvenile summer rearing", "months": [6, 7, 8]}]}, "chinook_spring": {"label": "Chinook - spring run", "stages": [{"name": "Adult entry (pre-spawn hold)", "months": [2, 3, 4, 5]}, {"name": "Summer holding", "months": [6, 7, 8]}, {"name": "Spawning", "months": [8, 9, 10]}, {"name": "Egg incubation", "months": [9, 10, 11, 12, 1]}, {"name": "Fry emergence & rearing", "months": [2, 3, 4]}, {"name": "Smolt outmigration", "months": [4, 5, 6]}]}, "coho": {"label": "Coho", "stages": [{"name": "Adult entry & migration", "months": [9, 10, 11]}, {"name": "Spawning", "months": [11, 12, 1]}, {"name": "Egg incubation", "months": [12, 1, 2, 3]}, {"name": "Fry emergence & rearing", "months": [3, 4, 5]}, {"name": "Juvenile summer rearing", "months": [6, 7, 8, 9]}, {"name": "Smolt outmigration", "months": [4, 5]}]}, "steelhead_winter": {"label": "Steelhead - winter run", "stages": [{"name": "Adult entry & migration", "months": [11, 12, 1, 2]}, {"name": "Spawning", "months": [1, 2, 3, 4]}, {"name": "Egg incubation", "months": [2, 3, 4, 5]}, {"name": "Fry emergence & rearing", "months": [4, 5, 6]}, {"name": "Juvenile summer rearing", "months": [6, 7, 8, 9]}, {"name": "Smolt outmigration", "months": [3, 4, 5]}]}, "steelhead_summer": {"label": "Steelhead - summer run", "stages": [{"name": "Adult entry (pre-spawn)", "months": [6, 7, 8, 9]}, {"name": "Winter/spring holding", "months": [10, 11, 12, 1, 2]}, {"name": "Spawning", "months": [2, 3, 4, 5]}, {"name": "Egg incubation", "months": [3, 4, 5, 6]}, {"name": "Fry emergence & rearing", "months": [5, 6, 7]}, {"name": "Smolt outmigration", "months": [4, 5, 6]}]}, "chum": {"label": "Chum", "stages": [{"name": "Adult entry & migration", "months": [9, 10, 11]}, {"name": "Spawning", "months": [10, 11, 12]}, {"name": "Egg incubation", "months": [11, 12, 1, 2]}, {"name": "Fry emergence & outmigration", "months": [2, 3, 4]}]}, "pink": {"label": "Pink (odd years)", "stages": [{"name": "Adult entry & migration", "months": [7, 8, 9]}, {"name": "Spawning", "months": [8, 9, 10]}, {"name": "Egg incubation", "months": [9, 10, 11, 12]}, {"name": "Fry outmigration (immediate)", "months": [12, 1, 2, 3]}]}, "sockeye": {"label": "Sockeye", "stages": [{"name": "Adult entry & lake residence", "months": [6, 7, 8]}, {"name": "Spawning", "months": [8, 9, 10]}, {"name": "Egg incubation", "months": [9, 10, 11, 12, 1, 2]}, {"name": "Alevin & fry emergence", "months": [2, 3, 4]}, {"name": "Juvenile lake rearing", "months": [4, 5, 6, 7, 8, 9, 10, 11, 12]}, {"name": "Smolt outmigration", "months": [4, 5, 6]}]}};
+const COLORS = ['#7F77DD','#1D9E75','#D85A30','#D4537E',
+                '#378ADD','#639922','#BA7517','#5B3A8E'];
+
+let iv_monthly_medians = null;
+let current_skey       = 'chinook_fall';
+
+function buildCalendarShapes(skey) {
+  const stages = LIFE_STAGE_DEFS[skey].stages;
+  const shapes = [];
+  stages.forEach((stage, i) => {
+    stage.months.forEach(m => {
+      shapes.push({
+        type: 'rect',
+        x0: m - 0.42, x1: m + 0.42,
+        y0: i + 0.08, y1: i + 0.92,
+        fillcolor: COLORS[i % COLORS.length],
+        line: { color: 'white', width: 0.5 },
+        opacity: 0.85,
+        xref: 'x2', yref: 'y2'
+      });
+    });
+  });
+  return shapes;
+}
+
+function switchSpecies(skey) {
+  current_skey = skey;
+  renderChart(skey);
+}
+
+function renderChart(skey) {
+  const sdef   = LIFE_STAGE_DEFS[skey];
+  const stages = sdef.stages;
+  const months = [1,2,3,4,5,6,7,8,9,10,11,12];
+  const monLabels = ['Jan','Feb','Mar','Apr','May','Jun',
+                     'Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  const ivX = [];
+  const ivY = [];
+  if (iv_monthly_medians) {
+    for (let m = 1; m <= 12; m++) {
+      if (iv_monthly_medians[m] !== undefined) {
+        ivX.push(m);
+        ivY.push(iv_monthly_medians[m]);
+      }
+    }
+  }
+
+  const traces = [];
+  traces.push({
+    x: ivX, y: ivY,
+    mode: 'lines+markers',
+    name: 'IV monthly median — last 12 months',
+    line: { color: '#1a9e1a', width: 2 },
+    marker: { size: 5 },
+    xaxis: 'x', yaxis: 'y',
+    hovertemplate: '%{y:,.0f} cfs<extra>IV monthly median</extra>'
+  });
+
+  stages.forEach((stage, i) => {
+    traces.push({
+      x: [null], y: [null],
+      mode: 'markers',
+      marker: { color: COLORS[i % COLORS.length],
+                 size: 10, symbol: 'square' },
+      name: stage.name, showlegend: false,
+      xaxis: 'x2', yaxis: 'y2'
+    });
+  });
+
+  const layout = {
+    height: 480,
+    autosize: true,
+    margin: { l:10, r:10, t:50, b:10 },
+    shapes: buildCalendarShapes(skey),
+    grid: { rows:2, columns:1, pattern:'independent' },
+    xaxis:  { tickvals: months, ticktext: monLabels,
+               range: [0.5,12.5], domain:[0,1] },
+    yaxis:  { title: 'Discharge (cfs)', domain:[0.35,1] },
+    xaxis2: { tickvals: months, ticktext: monLabels,
+               range: [0.5,12.5], domain:[0,1] },
+    yaxis2: {
+      tickvals: stages.map((_,i) => i + 0.5),
+      ticktext: stages.map(s => s.name),
+      range: [0, stages.length],
+      tickfont: { size: 9 },
+      domain: [0, 0.30]
+    },
+    legend: { orientation:'h', yanchor:'bottom',
+               y:1.02, xanchor:'left', x:0 },
+    hovermode: 'x unified',
+    plot_bgcolor:  'white',
+    paper_bgcolor: 'white',
+    font: { family:'Arial, sans-serif', size:11 },
+    annotations: [
+      { text: 'Real-time discharge — last 12 months',
+         xref:'paper', yref:'paper', x:0.5, y:1.04,
+         showarrow:false, font:{size:13} },
+      { text: 'Life-stage calendar',
+         xref:'paper', yref:'paper', x:0.5, y:0.30,
+         showarrow:false, font:{size:10} }
+    ]
+  };
+
+  Plotly.react('chart', traces, layout, {responsive: true});
+}
+
+async function fetchIV() {
+  const statusEl = document.getElementById('iv-status');
+  const url = (
+    'https://waterservices.usgs.gov/nwis/iv/' +
+    '?format=json&sites=' + SITE_ID +
+    '&parameterCd=00060&period=P365D'
+  );
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    const series = data?.value?.timeSeries;
+    if (!series || series.length === 0) {
+      statusEl.innerHTML =
+        '<span class="iv-none">No real-time data available.</span>';
+      renderChart(current_skey);
+      return;
+    }
+    const values = series[0]?.values?.[0]?.value ?? [];
+    const valid  = values.filter(v => parseFloat(v.value) > 0);
+    if (valid.length === 0) {
+      statusEl.innerHTML =
+        '<span class="iv-none">No valid readings in last 12 months.</span>';
+      renderChart(current_skey);
+      return;
+    }
+
+    const daily = {};
+    for (const v of valid) {
+      const d = v.dateTime.slice(0,10);
+      if (!daily[d]) daily[d] = [];
+      daily[d].push(parseFloat(v.value));
+    }
+    const dailyDates   = Object.keys(daily).sort();
+    const dailyMedians = {};
+    for (const d of dailyDates) {
+      const vals = daily[d].slice().sort((a,b) => a-b);
+      dailyMedians[d] = vals[Math.floor(vals.length/2)];
+    }
+
+    const byMonth = {};
+    for (const [d, val] of Object.entries(dailyMedians)) {
+      const mo = parseInt(d.split('-')[1]);
+      if (!byMonth[mo]) byMonth[mo] = [];
+      byMonth[mo].push(val);
+    }
+    iv_monthly_medians = {};
+    for (const [mo, vals] of Object.entries(byMonth)) {
+      const sorted = vals.slice().sort((a,b) => a-b);
+      iv_monthly_medians[parseInt(mo)] =
+        sorted[Math.floor(sorted.length/2)];
+    }
+
+    const latest    = dailyDates[dailyDates.length-1];
+    const latestCfs = dailyMedians[latest].toLocaleString(
+      undefined, {maximumFractionDigits:0}
+    );
+    statusEl.innerHTML = (
+      '<span class="iv-live">&#9679; Real-time data loaded — ' +
+      'latest: <b>' + latestCfs + ' cfs</b> (' + latest + ')</span>'
+    );
+    renderChart(current_skey);
+
+  } catch(err) {
+    statusEl.innerHTML =
+      '<span class="iv-error">Real-time data unavailable: ' +
+      err.message + '</span>';
+    renderChart(current_skey);
+  }
+}
+
+document.getElementById('sp-select').value = current_skey;
+renderChart(current_skey);
+fetchIV();
+</script>
+</body>
+</html>
