@@ -189,27 +189,26 @@ function updateTable2(skey) {
 // ── Fetch IV data — last 12 months (P365D) ───────────────────────────────────
 async function fetchIV() {
   const statusEl = document.getElementById('iv-status');
-  const url = (
-    'https://waterservices.usgs.gov/nwis/iv/' +
-    '?format=json&sites=' + SITE_ID +
-    '&parameterCd=00060&period=P365D'
-  );
+  const url =
+    'https://api.waterdata.usgs.gov/ogcapi/v0/collections/continuous/items' +
+    '?f=json&monitoring_location_id=USGS-' + SITE_ID +
+    '&parameter_code=00060&time=P365D&limit=50000';
+
 
   try {
     const resp = await fetch(url);
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const data = await resp.json();
 
-    const series = data?.value?.timeSeries;
-    if (!series || series.length === 0) {
+    const features = data?.features;
+    if (!features || features.length === 0) {
       statusEl.innerHTML =
         '<span class="iv-none">No real-time data available for this site.</span>';
       clearTable2Loading();
       return;
     }
 
-    const values = series[0]?.values?.[0]?.value ?? [];
-    const valid  = values.filter(v => parseFloat(v.value) > 0);
+    const valid = features.filter(f => parseFloat(f.properties.value) > 0);
     if (valid.length === 0) {
       statusEl.innerHTML =
         '<span class="iv-none">No valid real-time readings in last 12 months.</span>';
@@ -219,10 +218,10 @@ async function fetchIV() {
 
     // ── Compute daily medians grouped by date ─────────────────────────────
     const daily = {};
-    for (const v of valid) {
-      const d = v.dateTime.slice(0, 10);
+    for (const feat of valid) {
+      const d = feat.properties.time.slice(0, 10);
       if (!daily[d]) daily[d] = [];
-      daily[d].push(parseFloat(v.value));
+      daily[d].push(parseFloat(feat.properties.value));
     }
     const dailyDates = Object.keys(daily).sort();
     const dailyMedians = {};
