@@ -81,13 +81,10 @@ function switchSpecies(skey) {
   current_skey = skey;
 
   // ── Render chart ──────────────────────────────────────────────────────────
-  const figData = JSON.parse(FIGURES[skey]);
-
-  // Render chart (IV trace starts empty; restyle injects data below)
   Plotly.react('chart', figData.data, figData.layout,
                {responsive: true});
 
-  // Inject IV monthly median into the placeholder trace via restyle
+  // ── Inject IV monthly median — find trace by name, then restyle ──────────
   if (iv_monthly_medians !== null) {
     const ivX = [];
     const ivY = [];
@@ -97,8 +94,11 @@ function switchSpecies(skey) {
         ivY.push(iv_monthly_medians[m]);
       }
     }
-    const lastIdx = figData.data.length - 1;
-    Plotly.restyle('chart', {x: [ivX], y: [ivY]}, [lastIdx]);
+    const ivIdx = figData.data.findIndex(
+      t => t.name === 'IV monthly median — last 12 months');
+    if (ivIdx >= 0) {
+      Plotly.restyle('chart', {x: [ivX], y: [ivY]}, [ivIdx]);
+    }
   }
 
 
