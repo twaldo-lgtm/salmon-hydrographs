@@ -81,6 +81,7 @@ function switchSpecies(skey) {
   current_skey = skey;
 
   // ── Render chart ──────────────────────────────────────────────────────────
+  const figData = JSON.parse(FIGURES[skey]);
   Plotly.react('chart', figData.data, figData.layout,
                {responsive: true});
 
