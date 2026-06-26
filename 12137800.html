@@ -108,6 +108,7 @@ function switchSpecies(skey) {
 }
 
 function renderChart(skey) {
+  const currentYear = new Date().getFullYear();
   const sdef   = LIFE_STAGE_DEFS[skey];
   const stages = sdef.stages;
   const months = [1,2,3,4,5,6,7,8,9,10,11,12];
@@ -149,14 +150,14 @@ function renderChart(skey) {
   });
 
   const layout = {
-    height: 480,
+    height: 520,
     autosize: true,
-    margin: { l:10, r:10, t:50, b:10 },
+    margin: { l:10, r:10, t:70, b:20 },
     shapes: buildCalendarShapes(skey),
     grid: { rows:2, columns:1, pattern:'independent' },
     xaxis:  { tickvals: months, ticktext: monLabels,
                range: [0.5,12.5], domain:[0,1] },
-    yaxis:  { title: 'Discharge (cfs)', domain:[0.35,1] },
+    yaxis:  { title: 'Discharge (cfs)', domain:[0.42,1] },
     xaxis2: { tickvals: months, ticktext: monLabels,
                range: [0.5,12.5], domain:[0,1] },
     yaxis2: {
@@ -164,7 +165,7 @@ function renderChart(skey) {
       ticktext: stages.map(s => s.name),
       range: [0, stages.length],
       tickfont: { size: 9 },
-      domain: [0, 0.30]
+      domain: [0, 0.36]
     },
     legend: { orientation:'h', yanchor:'bottom',
                y:1.02, xanchor:'left', x:0 },
@@ -173,12 +174,12 @@ function renderChart(skey) {
     paper_bgcolor: 'white',
     font: { family:'Arial, sans-serif', size:11 },
     annotations: [
-      { text: 'Real-time discharge — last 12 months',
-         xref:'paper', yref:'paper', x:0.5, y:1.04,
+      { text: 'Real-time discharge — ' + currentYear,
+         xref:'paper', yref:'paper', x:0.5, y:1.07,
          showarrow:false, font:{size:13} },
-      { text: 'Life-stage calendar',
-         xref:'paper', yref:'paper', x:0.5, y:0.30,
-         showarrow:false, font:{size:10} }
+      { text: 'Salmon life-stage calendar',
+         xref:'paper', yref:'paper', x:0.5, y:0.385,
+         showarrow:false, font:{size:10, color:'#444'} }
     ]
   };
 
@@ -227,10 +228,15 @@ async function fetchIV() {
       dailyMedians[d] = vals[Math.floor(vals.length / 2)];
     }
 
-    // ── Compute monthly medians from daily medians ─────────────────────
+    // ── Filter daily medians to current calendar year only ─────────────
+    const currentYear = new Date().getFullYear().toString();
+    const currentYearDates = dailyDates.filter(d => d.startsWith(currentYear));
+
+    // ── Compute monthly medians from current-year daily medians ─────────
     const byMonth = {};
-    for (const [d, val] of Object.entries(dailyMedians)) {
-      const mo = parseInt(d.split('-')[1]);
+    for (const d of currentYearDates) {
+      const mo  = parseInt(d.split('-')[1]);
+      const val = dailyMedians[d];
       if (!byMonth[mo]) byMonth[mo] = [];
       byMonth[mo].push(val);
     }
@@ -249,7 +255,7 @@ async function fetchIV() {
     statusEl.innerHTML = (
       '<span class="iv-live">&#9679; Real-time data loaded — ' +
       'latest: <b>' + latestCfs + ' cfs</b> (' + latest + '). ' +
-      'Green line shows IV monthly medians — last 12 months.</span>'
+      'Green line shows ' + currentYear + ' monthly medians.</span>'
     );
     renderChart(current_skey);
 

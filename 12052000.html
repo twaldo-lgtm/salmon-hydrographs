@@ -232,10 +232,15 @@ async function fetchIV() {
       dailyMedians[d] = vals[Math.floor(vals.length / 2)];
     }
 
-    // ── Compute monthly medians from daily medians ────────────────────────
+    // ── Filter daily medians to current calendar year only ──────────────
+    const currentYear = new Date().getFullYear().toString();
+    const currentYearDates = dailyDates.filter(d => d.startsWith(currentYear));
+
+    // ── Compute monthly medians from current-year daily medians ──────────
     const byMonth = {};
-    for (const [d, val] of Object.entries(dailyMedians)) {
-      const mo = parseInt(d.split('-')[1]);
+    for (const d of currentYearDates) {
+      const mo  = parseInt(d.split('-')[1]);
+      const val = dailyMedians[d];
       if (!byMonth[mo]) byMonth[mo] = [];
       byMonth[mo].push(val);
     }
@@ -255,7 +260,7 @@ async function fetchIV() {
       'latest: <b>' +
       iv_latest_cfs.toLocaleString(undefined, {maximumFractionDigits:0}) +
       ' cfs</b> (' + iv_latest_date + '). ' +
-      'Green line shows IV monthly medians — last 12 months.</span>'
+      'Green line shows ' + currentYear + ' monthly medians.</span>'
     );
 
     // ── Re-render current chart and table 2 with IV data ─────────────────
