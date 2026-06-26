@@ -48,7 +48,7 @@
   This site does not have sufficient discharge data to meet the minimum threshold for flow alteration assessment (5 years of baseline or current period record).<br><br>
   Real-time discharge (last 12 months) is shown below alongside the
   salmon life-stage calendar. This reflects actual flow conditions but
-  cannot be compared to a pre-development baseline.
+  cannot be compared to a historic baseline.
 </div>
 
 <label for="sp-select"><b>Species / run:</b></label><br>
@@ -64,7 +64,7 @@
     <tr><th>Parameter</th><th>Code</th><th>Type</th>
     <th>Begin date</th><th>End date</th></tr>
   </thead>
-  <tbody><tr><td>Discharge (cfs)</td><td style="font-family:monospace">00060</td><td>DV, UV</td><td>1967-10-01</td><td>2026-06-17</td></tr><tr><td>Gage height (ft)</td><td style="font-family:monospace">00065</td><td>UV</td><td>2007-10-01</td><td>2026-06-17</td></tr></tbody>
+  <tbody><tr><td>Discharge (cfs)</td><td style="font-family:monospace">00060</td><td>DV, UV</td><td>1967-10-01</td><td>2026-06-25</td></tr><tr><td>Gage height (ft)</td><td style="font-family:monospace">00065</td><td>UV</td><td>2007-10-01</td><td>2026-06-25</td></tr></tbody>
 </table>
 <div class="usgs-link">
   Full record:
@@ -116,9 +116,10 @@ function renderChart(skey) {
 
   const ivX = [];
   const ivY = [];
+  const currentMonth = new Date().getMonth() + 1; // 1-indexed, clip to current month
   if (iv_monthly_medians) {
     for (let m = 1; m <= 12; m++) {
-      if (iv_monthly_medians[m] !== undefined) {
+      if (m <= currentMonth && iv_monthly_medians[m] !== undefined) {
         ivX.push(m);
         ivY.push(iv_monthly_medians[m]);
       }
@@ -186,44 +187,47 @@ function renderChart(skey) {
 
 async function fetchIV() {
   const statusEl = document.getElementById('iv-status');
-  const url = (
-    'https://waterservices.usgs.gov/nwis/iv/' +
-    '?format=json&sites=' + SITE_ID +
-    '&parameterCd=00060&period=P365D'
-  );
+  const url =
+    'https://api.waterdata.usgs.gov/ogcapi/v0/collections/continuous/items' +
+    '?f=json&monitoring_location_id=USGS-' + SITE_ID +
+    '&parameter_code=00060&time=P365D&limit=50000';
+
   try {
     const resp = await fetch(url);
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const data = await resp.json();
-    const series = data?.value?.timeSeries;
-    if (!series || series.length === 0) {
+
+    const features = data?.features;
+    if (!features || features.length === 0) {
       statusEl.innerHTML =
-        '<span class="iv-none">No real-time data available.</span>';
-      renderChart(current_skey);
-      return;
-    }
-    const values = series[0]?.values?.[0]?.value ?? [];
-    const valid  = values.filter(v => parseFloat(v.value) > 0);
-    if (valid.length === 0) {
-      statusEl.innerHTML =
-        '<span class="iv-none">No valid readings in last 12 months.</span>';
+        '<span class="iv-none">No real-time data available for this site.</span>';
       renderChart(current_skey);
       return;
     }
 
-    const daily = {};
-    for (const v of valid) {
-      const d = v.dateTime.slice(0,10);
-      if (!daily[d]) daily[d] = [];
-      daily[d].push(parseFloat(v.value));
+    const valid = features.filter(f => parseFloat(f.properties.value) > 0);
+    if (valid.length === 0) {
+      statusEl.innerHTML =
+        '<span class="iv-none">No valid real-time readings in last 12 months.</span>';
+      renderChart(current_skey);
+      return;
     }
-    const dailyDates   = Object.keys(daily).sort();
+
+    // ── Compute daily medians grouped by date ─────────────────────────
+    const daily = {};
+    for (const feat of valid) {
+      const d = feat.properties.time.slice(0, 10);
+      if (!daily[d]) daily[d] = [];
+      daily[d].push(parseFloat(feat.properties.value));
+    }
+    const dailyDates = Object.keys(daily).sort();
     const dailyMedians = {};
     for (const d of dailyDates) {
       const vals = daily[d].slice().sort((a,b) => a-b);
-      dailyMedians[d] = vals[Math.floor(vals.length/2)];
+      dailyMedians[d] = vals[Math.floor(vals.length / 2)];
     }
 
+    // ── Compute monthly medians from daily medians ─────────────────────
     const byMonth = {};
     for (const [d, val] of Object.entries(dailyMedians)) {
       const mo = parseInt(d.split('-')[1]);
@@ -234,16 +238,18 @@ async function fetchIV() {
     for (const [mo, vals] of Object.entries(byMonth)) {
       const sorted = vals.slice().sort((a,b) => a-b);
       iv_monthly_medians[parseInt(mo)] =
-        sorted[Math.floor(sorted.length/2)];
+        sorted[Math.floor(sorted.length / 2)];
     }
 
-    const latest    = dailyDates[dailyDates.length-1];
+    // ── Latest reading for status line ────────────────────────────────
+    const latest    = dailyDates[dailyDates.length - 1];
     const latestCfs = dailyMedians[latest].toLocaleString(
-      undefined, {maximumFractionDigits:0}
+      undefined, {maximumFractionDigits: 0}
     );
     statusEl.innerHTML = (
       '<span class="iv-live">&#9679; Real-time data loaded — ' +
-      'latest: <b>' + latestCfs + ' cfs</b> (' + latest + ')</span>'
+      'latest: <b>' + latestCfs + ' cfs</b> (' + latest + '). ' +
+      'Green line shows IV monthly medians — last 12 months.</span>'
     );
     renderChart(current_skey);
 
