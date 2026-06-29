@@ -64,7 +64,7 @@
     <tr><th>Parameter</th><th>Code</th><th>Type</th>
     <th>Begin date</th><th>End date</th></tr>
   </thead>
-  <tbody><tr><td>Discharge (cfs)</td><td style="font-family:monospace">00060</td><td>DV, UV</td><td>1967-10-01</td><td>2026-06-25</td></tr><tr><td>Gage height (ft)</td><td style="font-family:monospace">00065</td><td>DV, UV</td><td>2007-10-01</td><td>2026-06-25</td></tr><tr><td>Turbidity (FNU)</td><td style="font-family:monospace">63680</td><td>QW, UV</td><td>2013-11-21</td><td>2026-06-25</td></tr><tr><td>Parameter 71999</td><td style="font-family:monospace">71999</td><td>QW</td><td>2020-06-05</td><td>2020-06-05</td></tr><tr><td>Parameter 99112</td><td style="font-family:monospace">99112</td><td>QW</td><td>2020-06-05</td><td>2020-06-05</td></tr><tr><td>Parameter 99140</td><td style="font-family:monospace">99140</td><td>QW</td><td>2020-06-05</td><td>2020-06-05</td></tr></tbody>
+  <tbody><tr><td>Discharge (cfs)</td><td style="font-family:monospace">00060</td><td>DV, UV</td><td>1967-10-01</td><td>2026-06-29</td></tr><tr><td>Gage height (ft)</td><td style="font-family:monospace">00065</td><td>DV, UV</td><td>2007-10-01</td><td>2026-06-29</td></tr><tr><td>Turbidity (FNU)</td><td style="font-family:monospace">63680</td><td>QW, UV</td><td>2013-11-21</td><td>2026-06-29</td></tr><tr><td>Parameter 71999</td><td style="font-family:monospace">71999</td><td>QW</td><td>2020-06-05</td><td>2020-06-05</td></tr><tr><td>Parameter 99112</td><td style="font-family:monospace">99112</td><td>QW</td><td>2020-06-05</td><td>2020-06-05</td></tr><tr><td>Parameter 99140</td><td style="font-family:monospace">99140</td><td>QW</td><td>2020-06-05</td><td>2020-06-05</td></tr></tbody>
 </table>
 <div class="usgs-link">
   Full record:
@@ -117,7 +117,7 @@ function renderChart(skey) {
 
   const ivX = [];
   const ivY = [];
-  const currentMonth = new Date().getMonth() + 1; // 1-indexed, clip to current month
+  const currentMonth = new Date().getMonth() + 1;
   if (iv_monthly_medians) {
     for (let m = 1; m <= 12; m++) {
       if (m <= currentMonth && iv_monthly_medians[m] !== undefined) {
@@ -150,14 +150,14 @@ function renderChart(skey) {
   });
 
   const layout = {
-    height: 520,
+    height: 560,
     autosize: true,
-    margin: { l:10, r:10, t:70, b:20 },
+    margin: { l:10, r:10, t:70, b:50 },
     shapes: buildCalendarShapes(skey),
     grid: { rows:2, columns:1, pattern:'independent' },
     xaxis:  { tickvals: months, ticktext: monLabels,
                range: [0.5,12.5], domain:[0,1] },
-    yaxis:  { title: 'Discharge (cfs)', domain:[0.42,1] },
+    yaxis:  { title: 'Discharge (cfs)', domain:[0.50,1] },
     xaxis2: { tickvals: months, ticktext: monLabels,
                range: [0.5,12.5], domain:[0,1] },
     yaxis2: {
@@ -165,7 +165,7 @@ function renderChart(skey) {
       ticktext: stages.map(s => s.name),
       range: [0, stages.length],
       tickfont: { size: 9 },
-      domain: [0, 0.36]
+      domain: [0, 0.34]
     },
     legend: { orientation:'h', yanchor:'bottom',
                y:1.02, xanchor:'left', x:0 },
@@ -178,7 +178,7 @@ function renderChart(skey) {
          xref:'paper', yref:'paper', x:0.5, y:1.07,
          showarrow:false, font:{size:13} },
       { text: 'Salmon life-stage calendar',
-         xref:'paper', yref:'paper', x:0.5, y:0.385,
+         xref:'paper', yref:'paper', x:0.5, y:0.415,
          showarrow:false, font:{size:10, color:'#444'} }
     ]
   };
